@@ -1,6 +1,11 @@
 import { Home } from 'lucide-react'
+import { UserMenu } from '@/components/user-menu'
 
-export function SiteHeader() {
+export function SiteHeader({
+  user,
+}: {
+  user?: { name?: string | null; email: string } | null
+}) {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
@@ -23,9 +28,7 @@ export function SiteHeader() {
             Analizar contrato
           </a>
         </nav>
-        <span className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground">
-          Track Finanzas · shippe.ar
-        </span>
+        <UserMenu user={user ?? null} />
       </div>
     </header>
   )

@@ -1,18 +1,23 @@
+import { headers } from 'next/headers'
+import { auth } from '@/lib/auth'
 import { SiteHeader } from '@/components/site-header'
 import { Hero } from '@/components/hero'
 import { RentSimulator } from '@/components/rent-simulator'
 import { PriceCompare } from '@/components/price-compare'
 import { ContractAnalyzer } from '@/components/contract-analyzer'
 
-export default function Page() {
+export default async function Page() {
+  const session = await auth.api.getSession({ headers: await headers() })
+  const user = session?.user ?? null
+
   return (
     <main className="min-h-dvh bg-background">
-      <SiteHeader />
+      <SiteHeader user={user} />
       <Hero />
       <div className="mx-auto flex max-w-6xl flex-col gap-20 px-4 py-16">
         <RentSimulator />
         <PriceCompare />
-        <ContractAnalyzer />
+        <ContractAnalyzer isAuthed={!!user} />
       </div>
       <footer className="border-t border-border">
         <div className="mx-auto max-w-6xl px-4 py-8 text-sm text-muted-foreground">

@@ -173,8 +173,8 @@ export function ContractAnalyzer({ isAuthed = false }: { isAuthed?: boolean }) {
                     {saved ? 'Guardado' : 'Guardar'}
                   </Button>
                 ) : (
-                  <Button size="sm" variant="outline" asChild>
-                    <a href="/sign-in">Iniciá sesión para guardar</a>
+                  <Button size="sm" variant="outline" onClick={() => (window.location.href = '/sign-in')}>
+                    Iniciá sesión para guardar
                   </Button>
                 ))}
             </div>
