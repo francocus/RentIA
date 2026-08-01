@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { CreditCard, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,6 +23,7 @@ function formatExpiry(value: string) {
 }
 
 export function DemoCheckoutForm() {
+  const router = useRouter()
   const [cardNumber, setCardNumber] = useState('')
   const [expiry, setExpiry] = useState('')
   const [cvv, setCvv] = useState('')
@@ -32,6 +34,8 @@ export function DemoCheckoutForm() {
     e.preventDefault()
     startTransition(async () => {
       await activateDemoSubscription()
+      router.push('/inmobiliaria')
+      router.refresh()
     })
   }
 
@@ -46,7 +50,6 @@ export function DemoCheckoutForm() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           autoComplete="cc-name"
-          required
           disabled={isPending}
         />
       </div>
@@ -62,7 +65,6 @@ export function DemoCheckoutForm() {
             onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
             inputMode="numeric"
             autoComplete="cc-number"
-            required
             disabled={isPending}
             className="pr-10"
           />
@@ -84,7 +86,6 @@ export function DemoCheckoutForm() {
             onChange={(e) => setExpiry(formatExpiry(e.target.value))}
             inputMode="numeric"
             autoComplete="cc-exp"
-            required
             disabled={isPending}
           />
         </div>
@@ -97,7 +98,6 @@ export function DemoCheckoutForm() {
             onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
             inputMode="numeric"
             autoComplete="cc-csc"
-            required
             disabled={isPending}
           />
         </div>

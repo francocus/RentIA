@@ -1,7 +1,6 @@
 'use server'
 
 import { headers } from 'next/headers'
-import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { subscription, user } from '@/lib/db/schema'
@@ -49,5 +48,5 @@ export async function activateDemoSubscription() {
     })
   }
 
-  redirect('/inmobiliaria')
 }
+
