@@ -31,7 +31,7 @@ export type Analisis = {
   preguntasSugeridas: string[]
 }
 
-const EJEMPLO = `CONTRATO DE LOCACIÓN DE VIVIENDA. Entre el Sr. Locador y el Sr. Locatario se conviene la locación del inmueble sito en Av. Corrientes 1234, CABA. PLAZO: el presente contrato tendrá una duración de veinticuatro (24) meses a partir del 01/06/2025. PRECIO: el alquiler mensual inicial se fija en PESOS CUATROCIENTOS MIL ($400.000). ACTUALIZACIÓN: el valor se ajustará trimestralmente conforme al Índice de Contratos de Locación (ICL) publicado por el BCRA. GARANTÍA: el locatario deberá presentar garantía propietaria en CABA. DEPÓSITO: equivalente a un (1) mes de alquiler. RESCISIÓN ANTICIPADA: en caso de rescisión antes de los 6 meses, el locatario abonará dos meses de alquiler en concepto de multa. Los gastos de expensas extraordinarias estarán a cargo del locatario.`
+const EJEMPLO = `CONTRATO DE LOCACIÓN DE VIVIENDA. Entre el Sr. Locador y el Sr. Locatario se conviene la locación del inmueble sito en Av. Pellegrini 1234, Rosario, Santa Fe. PLAZO: el presente contrato tendrá una duración de veinticuatro (24) meses a partir del 01/06/2025. PRECIO: el alquiler mensual inicial se fija en PESOS CUATROCIENTOS MIL ($400.000). ACTUALIZACIÓN: el valor se ajustará trimestralmente conforme al Índice de Contratos de Locación (ICL) publicado por el BCRA. GARANTÍA: el locatario deberá presentar garantía propietaria en Rosario. DEPÓSITO: equivalente a un (1) mes de alquiler. RESCISIÓN ANTICIPADA: en caso de rescisión antes de los 6 meses, el locatario abonará dos meses de alquiler en concepto de multa. Los gastos de expensas extraordinarias estarán a cargo del locatario.`
 
 const severidadStyles: Record<string, string> = {
   alta: 'bg-destructive text-white',
