@@ -86,6 +86,14 @@ const SYSTEM =
   'resolución anticipada). Citá lo consultado en el campo fuentesLegales del resultado.'
 
 export async function POST(req: Request) {
+  const user = await getSessionUserFromRequest(req)
+  if (!user) {
+    return Response.json(
+      { error: 'Necesitás una cuenta para usar el análisis con IA. Creá tu cuenta gratis.' },
+      { status: 401 },
+    )
+  }
+
   const { contrato, fileData, mediaType, fechaContrato } = await req.json()
 
   const tieneTexto = typeof contrato === 'string' && contrato.trim().length >= 40

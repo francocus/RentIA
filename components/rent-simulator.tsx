@@ -22,7 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { formatARS, formatPct, proyectarAlquiler } from '@/lib/rent-data'
+import { ArrowUp } from 'lucide-react'
+import { formatARS, formatPct, proyectarConFechas, MESES, type ProyeccionFecha } from '@/lib/rent-data'
 
 type IndiceReal = {
   id: string
@@ -47,6 +48,8 @@ const LIBRE: IndiceReal = {
   variacionAnual: 0,
 }
 
+const AHORA = new Date()
+
 export function RentSimulator() {
   const { data, isLoading } = useSWR<{ indices: IndiceReal[]; fuente: string }>(
     '/api/indices',
@@ -64,39 +67,52 @@ export function RentSimulator() {
   const [frecuencia, setFrecuencia] = useState(3)
   const [duracion, setDuracion] = useState(36)
   const [tasaLibre, setTasaLibre] = useState(4)
+  const [mesInicio, setMesInicio] = useState(AHORA.getMonth())
+  const [anioInicio, setAnioInicio] = useState(AHORA.getFullYear())
 
   const indice = indices.find((i) => i.id === indiceId) ?? indices[0] ?? LIBRE
   const tasaMensual = indice.id === 'libre' ? tasaLibre : indice.tasaMensualEstimada
 
+  // Multiplicador de ajuste = crecimiento compuesto durante los meses de cada período.
+  const multiplicadorAjuste = useMemo(
+    () => Math.pow(1 + tasaMensual / 100, frecuencia),
+    [tasaMensual, frecuencia],
+  )
+
   const proyeccion = useMemo(
     () =>
-      proyectarAlquiler({
+      proyectarConFechas({
         montoInicial: monto,
-        tasaMensual,
+        multiplicadorAjuste,
         frecuenciaAjusteMeses: frecuencia,
         duracionMeses: duracion,
+        mesInicio,
+        anioInicio,
       }),
-    [monto, tasaMensual, frecuencia, duracion],
+    [monto, multiplicadorAjuste, frecuencia, duracion, mesInicio, anioInicio],
   )
 
   const final = proyeccion[proyeccion.length - 1]
-  const totalPagado = proyeccion.slice(1).reduce((acc, p) => acc + p.alquiler, 0)
-  const incrementoPct = ((final.alquiler - monto) / monto) * 100
+  const totalPagado = proyeccion.reduce((acc, p) => acc + p.alquiler, 0)
+  const incrementoPct = monto > 0 ? ((final.alquiler - monto) / monto) * 100 : 0
+  const ajustes = proyeccion.filter((p) => p.esAjuste)
+
+  const aniosDisponibles = [anioInicio - 1, anioInicio, anioInicio + 1, anioInicio + 2]
 
   return (
-    <section id="simulador" className="scroll-mt-20">
+    <div>
       <div className="mb-6">
         <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Simulador de ajuste de alquiler
-          </h2>
+          </h1>
           <Badge variant="secondary" className="font-normal">
             Datos reales del BCRA
           </Badge>
         </div>
-        <p className="mt-1 text-muted-foreground">
-          Proyectá cuánto vas a pagar durante todo el contrato usando la tasa mensual real de cada
-          índice oficial.
+        <p className="mt-1 text-muted-foreground text-pretty">
+          Poné el mes en que arrancás y mirá, mes por mes, cuándo te aumentan y cuánto vas a pagar
+          durante todo el contrato.
         </p>
       </div>
 
@@ -104,11 +120,11 @@ export function RentSimulator() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Datos del alquiler</CardTitle>
-            <CardDescription>Ajustá los valores para ver la proyección.</CardDescription>
+            <CardDescription>Completá los datos de tu contrato.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="monto">Alquiler inicial (ARS / mes)</Label>
+              <Label htmlFor="monto">¿Cuánto pagás de alquiler por mes? (ARS)</Label>
               <Input
                 id="monto"
                 type="number"
@@ -120,8 +136,41 @@ export function RentSimulator() {
               />
             </div>
 
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="mes-inicio">Mes de inicio</Label>
+                <Select value={String(mesInicio)} onValueChange={(v) => setMesInicio(Number(v))}>
+                  <SelectTrigger id="mes-inicio">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MESES.map((m, idx) => (
+                      <SelectItem key={m} value={String(idx)}>
+                        {m}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="anio-inicio">Año</Label>
+                <Select value={String(anioInicio)} onValueChange={(v) => setAnioInicio(Number(v))}>
+                  <SelectTrigger id="anio-inicio">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {aniosDisponibles.map((a) => (
+                      <SelectItem key={a} value={String(a)}>
+                        {a}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div className="flex flex-col gap-2">
-              <Label htmlFor="indice">Índice de actualización</Label>
+              <Label htmlFor="indice">¿Con qué índice te ajustan?</Label>
               <Select value={indiceId} onValueChange={(v) => setIndiceId(v ?? 'icl')}>
                 <SelectTrigger id="indice">
                   <SelectValue placeholder={isLoading ? 'Cargando índices…' : 'Elegí un índice'} />
@@ -160,31 +209,31 @@ export function RentSimulator() {
             )}
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="frecuencia">Frecuencia de ajuste</Label>
+              <Label htmlFor="frecuencia">¿Cada cuánto te aumentan?</Label>
               <Select value={String(frecuencia)} onValueChange={(v) => setFrecuencia(Number(v))}>
                 <SelectTrigger id="frecuencia">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">Mensual</SelectItem>
-                  <SelectItem value="3">Trimestral (cada 3 meses)</SelectItem>
-                  <SelectItem value="4">Cuatrimestral (cada 4 meses)</SelectItem>
-                  <SelectItem value="6">Semestral (cada 6 meses)</SelectItem>
-                  <SelectItem value="12">Anual (cada 12 meses)</SelectItem>
+                  <SelectItem value="1">Todos los meses</SelectItem>
+                  <SelectItem value="3">Cada 3 meses (trimestral)</SelectItem>
+                  <SelectItem value="4">Cada 4 meses (cuatrimestral)</SelectItem>
+                  <SelectItem value="6">Cada 6 meses (semestral)</SelectItem>
+                  <SelectItem value="12">Cada 12 meses (anual)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="duracion">Duración del contrato</Label>
+              <Label htmlFor="duracion">¿Cuánto dura el contrato?</Label>
               <Select value={String(duracion)} onValueChange={(v) => setDuracion(Number(v))}>
                 <SelectTrigger id="duracion">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="12">12 meses</SelectItem>
-                  <SelectItem value="24">24 meses</SelectItem>
-                  <SelectItem value="36">36 meses</SelectItem>
+                  <SelectItem value="12">1 año (12 meses)</SelectItem>
+                  <SelectItem value="24">2 años (24 meses)</SelectItem>
+                  <SelectItem value="36">3 años (36 meses)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -193,26 +242,34 @@ export function RentSimulator() {
 
         <div className="flex flex-col gap-6">
           <div className="grid gap-4 sm:grid-cols-3">
-            <StatCard label="Alquiler final" value={formatARS(final.alquiler)} hint={`Mes ${duracion}`} />
+            <StatCard
+              label="Vas a terminar pagando"
+              value={formatARS(final.alquiler)}
+              hint={`en ${final.etiqueta}`}
+            />
             <StatCard
               label="Aumento total"
               value={formatPct(incrementoPct)}
-              hint="sobre el valor inicial"
+              hint="sobre lo que pagás hoy"
               accent
             />
-            <StatCard label="Total a pagar" value={formatARS(totalPagado)} hint="durante el contrato" />
+            <StatCard
+              label="Total durante el contrato"
+              value={formatARS(totalPagado)}
+              hint={`${duracion} meses`}
+            />
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Evolución del alquiler</CardTitle>
+              <CardTitle className="text-base">Cómo evoluciona tu alquiler</CardTitle>
               <CardDescription>
-                Proyección con {indice.nombre}, ajuste cada {frecuencia}{' '}
-                {frecuencia === 1 ? 'mes' : 'meses'} a ~{tasaMensual}%/mes.
+                Desde {MESES[mesInicio]} {anioInicio} · ajuste cada {frecuencia}{' '}
+                {frecuencia === 1 ? 'mes' : 'meses'} con {indice.nombre}.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] w-full">
+              <div className="h-[280px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={proyeccion} margin={{ left: 4, right: 8, top: 8 }}>
                     <defs>
@@ -223,12 +280,11 @@ export function RentSimulator() {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                     <XAxis
-                      dataKey="mes"
+                      dataKey="etiquetaCorta"
                       tickLine={false}
                       axisLine={false}
-                      tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
-                      tickFormatter={(m) => `M${m}`}
-                      interval={Math.floor(duracion / 6)}
+                      tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }}
+                      interval={Math.max(0, Math.floor(duracion / 6) - 1)}
                     />
                     <YAxis
                       tickLine={false}
@@ -239,7 +295,7 @@ export function RentSimulator() {
                     />
                     <Tooltip
                       formatter={(value) => [formatARS(Number(value)), 'Alquiler']}
-                      labelFormatter={(m) => `Mes ${m}`}
+                      labelFormatter={(l) => String(l)}
                       contentStyle={{
                         background: 'var(--popover)',
                         border: '1px solid var(--border)',
@@ -260,13 +316,69 @@ export function RentSimulator() {
               </div>
               <p className="mt-3 text-xs text-muted-foreground">
                 {data?.fuente ?? 'BCRA · Estadísticas Monetarias'}. Las tasas se calculan con la
-                variación real de los últimos 3 meses; los valores futuros son una estimación.
+                variación real de los últimos meses; los valores futuros son una estimación.
               </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Cuándo y cuánto te aumentan</CardTitle>
+              <CardDescription>
+                Cada fila es un mes en el que se aplica un ajuste sobre tu alquiler.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {ajustes.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Con esta configuración no hay aumentos durante el contrato.
+                </p>
+              ) : (
+                <div className="overflow-hidden rounded-lg border border-border">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
+                      <tr>
+                        <th className="px-4 py-2 font-medium">Cuándo</th>
+                        <th className="px-4 py-2 font-medium">Nuevo alquiler</th>
+                        <th className="px-4 py-2 font-medium">Aumento</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      <tr>
+                        <td className="px-4 py-2.5 text-muted-foreground">
+                          {proyeccion[0].etiqueta} <span className="text-xs">(inicio)</span>
+                        </td>
+                        <td className="px-4 py-2.5 font-mono font-medium text-foreground">
+                          {formatARS(monto)}
+                        </td>
+                        <td className="px-4 py-2.5 text-muted-foreground">—</td>
+                      </tr>
+                      {ajustes.map((a) => (
+                        <tr key={a.indice}>
+                          <td className="px-4 py-2.5 text-foreground">{a.etiqueta}</td>
+                          <td className="px-4 py-2.5 font-mono font-medium text-foreground">
+                            {formatARS(a.alquiler)}
+                          </td>
+                          <td className="px-4 py-2.5">
+                            <span className="inline-flex items-center gap-1 font-medium text-primary">
+                              <ArrowUp className="h-3.5 w-3.5" />
+                              {formatPct(a.aumentoPct)}
+                              <span className="text-xs font-normal text-muted-foreground">
+                                (+{formatARS(a.diffPesos)})
+                              </span>
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
-    </section>
+    </div>
   )
 }
 

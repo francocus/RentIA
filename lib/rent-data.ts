@@ -75,6 +75,105 @@ export function formatPct(value: number): string {
   return `${value > 0 ? '+' : ''}${value.toFixed(1)}%`
 }
 
+export const MESES = [
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
+] as const
+
+export const MESES_CORTOS = [
+  'Ene',
+  'Feb',
+  'Mar',
+  'Abr',
+  'May',
+  'Jun',
+  'Jul',
+  'Ago',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dic',
+] as const
+
+export type ProyeccionFecha = {
+  indice: number // meses transcurridos desde el inicio (0 = mes de inicio)
+  anio: number
+  mes: number // 0-11
+  etiqueta: string // "Septiembre 2026"
+  etiquetaCorta: string // "Sep 2026"
+  alquiler: number
+  esAjuste: boolean // true si en este mes se aplicó un aumento
+  aumentoPct: number // % de aumento respecto del mes anterior (0 si no cambió)
+  diffPesos: number // diferencia en pesos respecto del mes anterior
+}
+
+/**
+ * Proyecta el alquiler mes a mes con fechas reales. En cada mes que corresponde
+ * un ajuste (según la frecuencia) el valor se multiplica por `multiplicadorAjuste`.
+ * El primer punto es el mes/año de inicio con el valor inicial.
+ */
+export function proyectarConFechas(params: {
+  montoInicial: number
+  multiplicadorAjuste: number
+  frecuenciaAjusteMeses: number
+  duracionMeses: number
+  mesInicio: number // 0-11
+  anioInicio: number
+}): ProyeccionFecha[] {
+  const {
+    montoInicial,
+    multiplicadorAjuste,
+    frecuenciaAjusteMeses,
+    duracionMeses,
+    mesInicio,
+    anioInicio,
+  } = params
+
+  const puntos: ProyeccionFecha[] = []
+  let actual = montoInicial
+  let anterior = montoInicial
+
+  for (let i = 0; i < duracionMeses; i++) {
+    const esAjuste =
+      i > 0 && frecuenciaAjusteMeses > 0 && i % frecuenciaAjusteMeses === 0
+
+    if (esAjuste) {
+      anterior = actual
+      actual = actual * multiplicadorAjuste
+    }
+
+    const totalMeses = mesInicio + i
+    const anio = anioInicio + Math.floor(totalMeses / 12)
+    const mes = totalMeses % 12
+    const valor = Math.round(actual)
+    const valorAnterior = Math.round(anterior)
+
+    puntos.push({
+      indice: i,
+      anio,
+      mes,
+      etiqueta: `${MESES[mes]} ${anio}`,
+      etiquetaCorta: `${MESES_CORTOS[mes]} ${anio}`,
+      alquiler: valor,
+      esAjuste,
+      aumentoPct: esAjuste && valorAnterior > 0 ? ((valor - valorAnterior) / valorAnterior) * 100 : 0,
+      diffPesos: esAjuste ? valor - valorAnterior : 0,
+    })
+  }
+
+  return puntos
+}
+
 export type ProyeccionPunto = {
   mes: number
   etiqueta: string
