@@ -29,18 +29,22 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
 
   const role = (session.user as any).role ?? 'inquilino'
   const isDemo = isDemoPremiumUser(session.user.email)
+  if (isDemo) return { role, isInmobiliaria: true, hasActiveSub: true, sub: null }
 
-  const [sub] = await db
-    .select()
-    .from(subscription)
-    .where(eq(subscription.userId, session.user.id))
+  let sub: typeof subscription.$inferSelect | undefined
+  try {
+    ;[sub] = await db.select().from(subscription).where(eq(subscription.userId, session.user.id))
+  } catch (error) {
+    console.error('[subscription-status]', error)
+    return { role, isInmobiliaria: false, hasActiveSub: false, sub: null }
+  }
 
   const hasActiveSub = sub?.status === 'active' || sub?.status === 'trialing'
 
   return {
     role,
-    isInmobiliaria: isDemo || (role === 'inmobiliaria' && hasActiveSub),
-    hasActiveSub: hasActiveSub || isDemo,
+    isInmobiliaria: role === 'inmobiliaria' && hasActiveSub,
+    hasActiveSub,
     sub: sub ?? null,
   }
 }
