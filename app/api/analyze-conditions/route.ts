@@ -1,3 +1,4 @@
+import { google } from '@ai-sdk/google'
 import { generateText, Output } from 'ai'
 import { z } from 'zod'
 import { sql } from 'drizzle-orm'
@@ -86,7 +87,7 @@ export async function POST(req: Request) {
 
   try {
     const { output } = await generateText({
-      model: 'openai/gpt-4.1-mini',
+      model: google('gemini-flash-latest'),
       output: Output.object({ schema: evaluacionSchema }),
       system:
         'Sos un asesor que ayuda a inquilinos en Rosario, Argentina, a decidir antes de firmar un ' +
@@ -107,7 +108,7 @@ export async function POST(req: Request) {
     return Response.json(
       {
         error:
-          'No se pudo evaluar las condiciones. Verificá que el AI Gateway esté habilitado (tarjeta o AI_GATEWAY_API_KEY).',
+          'No se pudo evaluar las condiciones. Verificá que la API key de Gemini (GOOGLE_GENERATIVE_AI_API_KEY) esté configurada.',
       },
       { status: 500 },
     )
