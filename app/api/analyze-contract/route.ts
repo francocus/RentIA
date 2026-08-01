@@ -1,3 +1,4 @@
+import { google } from '@ai-sdk/google'
 import { generateText, Output } from 'ai'
 import { z } from 'zod'
 import { marcoLegalParaPrompt, regimenPorFecha } from '@/lib/ley-alquileres'
@@ -113,7 +114,8 @@ export async function POST(req: Request) {
   try {
     const { output } = await generateText({
       // Gemini es multimodal: analiza tanto texto como archivos (PDF e imágenes).
-      model: 'google/gemini-2.5-flash',
+      // Usa la API key de Google directamente (GOOGLE_GENERATIVE_AI_API_KEY).
+      model: google('gemini-2.5-flash'),
       output: Output.object({ schema: analysisSchema }),
       system: SYSTEM,
       messages: [{ role: 'user', content }],
@@ -126,7 +128,7 @@ export async function POST(req: Request) {
       {
         error:
           'No se pudo analizar el contrato. Si el archivo es una imagen poco legible, probá con mejor calidad. ' +
-          'Verificá también que el AI Gateway esté habilitado (tarjeta o AI_GATEWAY_API_KEY).',
+          'Verificá también que la API key de Gemini (GOOGLE_GENERATIVE_AI_API_KEY) esté configurada.',
       },
       { status: 500 },
     )

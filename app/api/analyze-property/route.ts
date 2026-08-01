@@ -1,3 +1,4 @@
+import { google } from '@ai-sdk/google'
 import { generateText, Output } from 'ai'
 import { z } from 'zod'
 import { zonas, formatARS } from '@/lib/rent-data'
@@ -80,7 +81,7 @@ export async function POST(req: Request) {
 
   try {
     const { output } = await generateText({
-      model: 'google/gemini-2.5-flash',
+      model: google('gemini-2.5-flash'),
       output: Output.object({ schema: evaluacionSchema }),
       system:
         'Sos un asesor inmobiliario que ayuda a inquilinos en Argentina a decidir si conviene alquilar un ' +
@@ -103,7 +104,7 @@ export async function POST(req: Request) {
     return Response.json(
       {
         error:
-          'No se pudo evaluar el inmueble. Verificá que el AI Gateway esté habilitado (tarjeta o AI_GATEWAY_API_KEY).',
+          'No se pudo evaluar el inmueble. Verificá que la API key de Gemini (GOOGLE_GENERATIVE_AI_API_KEY) esté configurada.',
       },
       { status: 500 },
     )
