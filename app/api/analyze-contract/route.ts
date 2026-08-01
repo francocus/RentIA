@@ -1,9 +1,11 @@
-import { generateText, Output } from 'ai'
+import { google } from '@ai-sdk/google'
+import { generateText, Output, isStepCount } from 'ai'
 import { z } from 'zod'
 import { marcoLegalParaPrompt, regimenPorFecha } from '@/lib/ley-alquileres'
-import { getSessionUserFromRequest } from '@/lib/session'
+import { conectarFuentesLegales } from '@/lib/legal-mcp'
 
-export const maxDuration = 60
+// Las consultas a InfoLEG agregan latencia: damos más margen al análisis.
+export const maxDuration = 120
 
 const analysisSchema = z.object({
   resumen: z.string().describe('Resumen del contrato en 2-3 oraciones, en español rioplatense claro.'),
@@ -50,6 +52,17 @@ const analysisSchema = z.object({
   preguntasSugeridas: z
     .array(z.string())
     .describe('Preguntas que el inquilino debería hacerle al propietario o inmobiliaria antes de firmar.'),
+  fuentesLegales: z
+    .array(
+      z.object({
+        norma: z.string().describe('Ej: "Ley 26.994 (Código Civil y Comercial)", "DNU 70/2023".'),
+        articulos: z.string().describe('Artículos citados, ej: "arts. 1196 y 1198", o "" si no aplica.'),
+        relevancia: z.string().describe('Por qué esta norma es relevante para el contrato analizado, en 1 oración.'),
+      }),
+    )
+    .describe(
+      'Normas oficiales consultadas en InfoLEG que respaldan el análisis. Vacío solo si no se pudo consultar ninguna fuente.',
+    ),
 })
 
 const SYSTEM =
@@ -62,7 +75,15 @@ const SYSTEM =
   'LÍNEA DE TIEMPO NORMATIVA DE ALQUILERES EN ARGENTINA (según fecha de firma del contrato):\n' +
   marcoLegalParaPrompt() +
   '\n\nLa "nueva ley" o desregulación es el DNU 70/2023 (vigente desde el 29/12/2023), que derogó ' +
-  'la Ley de Alquileres y habilitó el libre pacto de plazo, moneda, índice y frecuencia de ajuste.'
+  'la Ley de Alquileres y habilitó el libre pacto de plazo, moneda, índice y frecuencia de ajuste.' +
+  '\n\nFUENTES OFICIALES: tenés herramientas para consultar InfoLEG (base oficial de legislación ' +
+  'nacional del Ministerio de Justicia). Usalas para verificar el texto VIGENTE de las normas clave ' +
+  'antes de afirmar qué exige o permite el régimen aplicable. Normas de referencia: Ley 26.994 ' +
+  '(Código Civil y Comercial, arts. 1187 a 1226 sobre locación), Ley 27.551, Ley 27.737 y DNU 70/2023. ' +
+  'Flujo sugerido: usá infoleg_resolver_id con tipo y número para obtener el id de la norma, y luego ' +
+  'infoleg_obtener_texto_actualizado para leer los artículos pertinentes. Hacé como máximo 3 o 4 ' +
+  'consultas, enfocadas en los puntos dudosos del contrato (plazo mínimo, ajuste, depósito, expensas, ' +
+  'resolución anticipada). Citá lo consultado en el campo fuentesLegales del resultado.'
 
 export async function POST(req: Request) {
   const user = await getSessionUserFromRequest(req)
@@ -119,15 +140,21 @@ export async function POST(req: Request) {
     content.push({ type: 'text', text: `${instruccion}\n\n"""${contrato.slice(0, 12000)}"""` })
   }
 
-  // Con archivos usamos un modelo multimodal (lee PDF e imágenes).
-  const model = tieneArchivo ? 'google/gemini-2.5-flash' : 'openai/gpt-4.1-mini'
+  // Conectamos las herramientas de InfoLEG (legislación oficial). Si el servidor
+  // no responde, el análisis sigue sin fuentes externas.
+  const fuentesLegales = await conectarFuentesLegales()
 
   try {
     const { output } = await generateText({
-      model,
+      // Gemini es multimodal: analiza tanto texto como archivos (PDF e imágenes).
+      // Usa la API key de Google directamente (GOOGLE_GENERATIVE_AI_API_KEY).
+      model: google('gemini-flash-latest'),
       output: Output.object({ schema: analysisSchema }),
       system: SYSTEM,
       messages: [{ role: 'user', content }],
+      // Herramientas de consulta a InfoLEG + tope de pasos: hasta 6 consultas
+      // legales y 1 paso final para generar la salida estructurada.
+      ...(fuentesLegales ? { tools: fuentesLegales.tools, stopWhen: isStepCount(7) } : {}),
     })
 
     return Response.json(output)
@@ -137,9 +164,11 @@ export async function POST(req: Request) {
       {
         error:
           'No se pudo analizar el contrato. Si el archivo es una imagen poco legible, probá con mejor calidad. ' +
-          'Verificá también que el AI Gateway esté habilitado (tarjeta o AI_GATEWAY_API_KEY).',
+          'Verificá también que la API key de Gemini (GOOGLE_GENERATIVE_AI_API_KEY) esté configurada.',
       },
       { status: 500 },
     )
+  } finally {
+    await fuentesLegales?.client.close().catch(() => {})
   }
 }
