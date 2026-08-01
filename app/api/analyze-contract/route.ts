@@ -1,6 +1,7 @@
 import { generateText, Output } from 'ai'
 import { z } from 'zod'
 import { marcoLegalParaPrompt, regimenPorFecha } from '@/lib/ley-alquileres'
+import { getSessionUserFromRequest } from '@/lib/session'
 
 export const maxDuration = 60
 
@@ -64,6 +65,14 @@ const SYSTEM =
   'la Ley de Alquileres y habilitó el libre pacto de plazo, moneda, índice y frecuencia de ajuste.'
 
 export async function POST(req: Request) {
+  const user = await getSessionUserFromRequest(req)
+  if (!user) {
+    return Response.json(
+      { error: 'Necesitás una cuenta para usar el análisis con IA. Creá tu cuenta gratis.' },
+      { status: 401 },
+    )
+  }
+
   const { contrato, fileData, mediaType, fechaContrato } = await req.json()
 
   const tieneTexto = typeof contrato === 'string' && contrato.trim().length >= 40

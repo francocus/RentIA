@@ -17,8 +17,20 @@ export type ZonaStats = {
 
 // Calcula promedio, mínimo y máximo de alquiler por zona directamente desde
 // los contratos guardados en la base (tabla market_listings).
-export async function GET() {
+// Acepta ?ambientes=N para filtrar por cantidad de ambientes (4 = 4 o más).
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url)
+    const ambParam = Number(searchParams.get('ambientes'))
+    const ambientes = Number.isFinite(ambParam) && ambParam > 0 ? Math.floor(ambParam) : null
+
+    const where =
+      ambientes === null
+        ? undefined
+        : ambientes >= 4
+          ? sql`${marketListings.ambientes} >= 4`
+          : sql`${marketListings.ambientes} = ${ambientes}`
+
     const rows = await db
       .select({
         zonaId: marketListings.zonaId,
@@ -30,6 +42,7 @@ export async function GET() {
         precioMax: sql<number>`max(${marketListings.alquiler})::int`,
       })
       .from(marketListings)
+      .where(where)
       .groupBy(marketListings.zonaId, marketListings.zona, marketListings.ciudad)
       .orderBy(sql`round(avg(${marketListings.alquiler})) desc`)
 
