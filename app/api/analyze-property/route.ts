@@ -81,7 +81,7 @@ export async function POST(req: Request) {
 
   try {
     const { output } = await generateText({
-      model: google('gemini-2.5-flash'),
+      model: google('gemini-flash-latest'),
       output: Output.object({ schema: evaluacionSchema }),
       system:
         'Sos un asesor inmobiliario que ayuda a inquilinos en Argentina a decidir si conviene alquilar un ' +

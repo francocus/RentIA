@@ -115,7 +115,7 @@ export async function POST(req: Request) {
     const { output } = await generateText({
       // Gemini es multimodal: analiza tanto texto como archivos (PDF e imágenes).
       // Usa la API key de Google directamente (GOOGLE_GENERATIVE_AI_API_KEY).
-      model: google('gemini-2.5-flash'),
+      model: google('gemini-flash-latest'),
       output: Output.object({ schema: analysisSchema }),
       system: SYSTEM,
       messages: [{ role: 'user', content }],
