@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import useSWR from 'swr'
 import {
   Area,
   AreaChart,
@@ -13,6 +14,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
@@ -20,25 +22,61 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { formatARS, formatPct, indices, proyectarAlquiler } from '@/lib/rent-data'
+import { formatARS, formatPct, proyectarAlquiler } from '@/lib/rent-data'
+
+type IndiceReal = {
+  id: string
+  nombre: string
+  descripcion: string
+  ultimoValor: number
+  ultimaFecha: string
+  tasaMensualEstimada: number
+  variacionAnual: number
+}
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
+
+// Opción de acuerdo libre (post DNU 70/2023): no viene del BCRA, se pacta.
+const LIBRE: IndiceReal = {
+  id: 'libre',
+  nombre: 'Acuerdo libre',
+  descripcion: 'Porcentaje pactado libremente entre las partes (habilitado por el DNU 70/2023).',
+  ultimoValor: 0,
+  ultimaFecha: '',
+  tasaMensualEstimada: 4,
+  variacionAnual: 0,
+}
 
 export function RentSimulator() {
+  const { data, isLoading } = useSWR<{ indices: IndiceReal[]; fuente: string }>(
+    '/api/indices',
+    fetcher,
+    { revalidateOnFocus: false },
+  )
+
+  const indices: IndiceReal[] = useMemo(() => {
+    const reales = data?.indices ?? []
+    return [...reales, LIBRE]
+  }, [data])
+
   const [monto, setMonto] = useState(450000)
   const [indiceId, setIndiceId] = useState('icl')
   const [frecuencia, setFrecuencia] = useState(3)
   const [duracion, setDuracion] = useState(36)
+  const [tasaLibre, setTasaLibre] = useState(4)
 
-  const indice = indices.find((i) => i.id === indiceId) ?? indices[0]
+  const indice = indices.find((i) => i.id === indiceId) ?? indices[0] ?? LIBRE
+  const tasaMensual = indice.id === 'libre' ? tasaLibre : indice.tasaMensualEstimada
 
   const proyeccion = useMemo(
     () =>
       proyectarAlquiler({
         montoInicial: monto,
-        tasaMensual: indice.tasaMensualEstimada,
+        tasaMensual,
         frecuenciaAjusteMeses: frecuencia,
         duracionMeses: duracion,
       }),
-    [monto, indice.tasaMensualEstimada, frecuencia, duracion],
+    [monto, tasaMensual, frecuencia, duracion],
   )
 
   const final = proyeccion[proyeccion.length - 1]
@@ -48,11 +86,17 @@ export function RentSimulator() {
   return (
     <section id="simulador" className="scroll-mt-20">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold tracking-tight text-foreground">
-          Simulador de ajuste de alquiler
-        </h2>
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">
+            Simulador de ajuste de alquiler
+          </h2>
+          <Badge variant="secondary" className="font-normal">
+            Datos reales del BCRA
+          </Badge>
+        </div>
         <p className="mt-1 text-muted-foreground">
-          Proyectá cuánto vas a pagar durante todo el contrato según el índice de actualización.
+          Proyectá cuánto vas a pagar durante todo el contrato usando la tasa mensual real de cada
+          índice oficial.
         </p>
       </div>
 
@@ -80,18 +124,40 @@ export function RentSimulator() {
               <Label htmlFor="indice">Índice de actualización</Label>
               <Select value={indiceId} onValueChange={(v) => setIndiceId(v ?? 'icl')}>
                 <SelectTrigger id="indice">
-                  <SelectValue />
+                  <SelectValue placeholder={isLoading ? 'Cargando índices…' : 'Elegí un índice'} />
                 </SelectTrigger>
                 <SelectContent>
                   {indices.map((i) => (
                     <SelectItem key={i.id} value={i.id}>
-                      {i.nombre} · ~{i.tasaMensualEstimada}%/mes
+                      {i.nombre}
+                      {i.id !== 'libre' ? ` · ~${i.tasaMensualEstimada}%/mes` : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <p className="text-xs leading-relaxed text-muted-foreground">{indice.descripcion}</p>
+              {indice.id !== 'libre' && indice.ultimaFecha && (
+                <p className="text-xs text-muted-foreground">
+                  Último valor oficial: <span className="font-mono">{indice.ultimoValor}</span> (
+                  {indice.ultimaFecha}) · var. interanual {formatPct(indice.variacionAnual)}
+                </p>
+              )}
             </div>
+
+            {indice.id === 'libre' && (
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="tasa-libre">Aumento mensual pactado (%)</Label>
+                <Input
+                  id="tasa-libre"
+                  type="number"
+                  min={0}
+                  step={0.5}
+                  value={tasaLibre}
+                  onChange={(e) => setTasaLibre(Number(e.target.value) || 0)}
+                  className="font-mono"
+                />
+              </div>
+            )}
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="frecuencia">Frecuencia de ajuste</Label>
@@ -100,6 +166,7 @@ export function RentSimulator() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="1">Mensual</SelectItem>
                   <SelectItem value="3">Trimestral (cada 3 meses)</SelectItem>
                   <SelectItem value="4">Cuatrimestral (cada 4 meses)</SelectItem>
                   <SelectItem value="6">Semestral (cada 6 meses)</SelectItem>
@@ -140,7 +207,8 @@ export function RentSimulator() {
             <CardHeader>
               <CardTitle className="text-base">Evolución del alquiler</CardTitle>
               <CardDescription>
-                Proyección con {indice.nombre}, ajuste cada {frecuencia} meses.
+                Proyección con {indice.nombre}, ajuste cada {frecuencia}{' '}
+                {frecuencia === 1 ? 'mes' : 'meses'} a ~{tasaMensual}%/mes.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -190,6 +258,10 @@ export function RentSimulator() {
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                {data?.fuente ?? 'BCRA · Estadísticas Monetarias'}. Las tasas se calculan con la
+                variación real de los últimos 3 meses; los valores futuros son una estimación.
+              </p>
             </CardContent>
           </Card>
         </div>

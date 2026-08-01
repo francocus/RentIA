@@ -1,16 +1,28 @@
 'use client'
 
 import { useState } from 'react'
-import { AlertTriangle, FileSearch, Loader2, Sparkles } from 'lucide-react'
+import { AlertTriangle, Check, FileSearch, Loader2, Minus, Save, Scale, Sparkles, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { saveAnalysis } from '@/app/actions/analyses'
 
-type Analisis = {
+export type Analisis = {
   resumen: string
+  fechaContratoDetectada: string
+  regimenAplicable: string
+  esPosteriorNuevaLey: boolean
+  analisisLegal: string[]
+  cumplimientoNormativo: {
+    aspecto: string
+    estado: 'cumple' | 'no-cumple' | 'segun-pacto' | 'no-determinado'
+    detalle: string
+  }[]
   indiceActualizacion: string
   frecuenciaAjuste: string
   duracion: string
@@ -27,19 +39,34 @@ const severidadStyles: Record<string, string> = {
   baja: 'bg-secondary text-secondary-foreground',
 }
 
-export function ContractAnalyzer() {
+const estadoConfig: Record<
+  string,
+  { label: string; className: string; icon: typeof Check }
+> = {
+  cumple: { label: 'Cumple', className: 'text-primary', icon: Check },
+  'no-cumple': { label: 'No cumple', className: 'text-destructive', icon: X },
+  'segun-pacto': { label: 'Según pacto', className: 'text-accent-foreground', icon: Minus },
+  'no-determinado': { label: 'Sin datos', className: 'text-muted-foreground', icon: Minus },
+}
+
+export function ContractAnalyzer({ isAuthed = false }: { isAuthed?: boolean }) {
   const [contrato, setContrato] = useState('')
+  const [fecha, setFecha] = useState('')
+  const [titulo, setTitulo] = useState('')
   const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [analisis, setAnalisis] = useState<Analisis | null>(null)
 
   async function analizar() {
     setLoading(true)
     setAnalisis(null)
+    setSaved(false)
     try {
       const res = await fetch('/api/analyze-contract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contrato }),
+        body: JSON.stringify({ contrato, fechaContrato: fecha || undefined }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -54,12 +81,35 @@ export function ContractAnalyzer() {
     }
   }
 
+  async function guardar() {
+    if (!analisis) return
+    setSaving(true)
+    try {
+      const res = await saveAnalysis({
+        titulo: titulo.trim() || `Contrato ${analisis.fechaContratoDetectada || 'sin fecha'}`,
+        fechaContrato: fecha || null,
+        resultado: analisis,
+      })
+      if (res?.error) {
+        toast.error(res.error)
+        return
+      }
+      setSaved(true)
+      toast.success('Análisis guardado en tu historial.')
+    } catch {
+      toast.error('No se pudo guardar el análisis.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <section id="contrato" className="scroll-mt-20">
       <div className="mb-6">
         <h2 className="text-2xl font-bold tracking-tight text-foreground">Analizá tu contrato con IA</h2>
         <p className="mt-1 text-muted-foreground">
-          Pegá el texto del contrato y la IA te explica ajustes, plazos y cláusulas riesgosas.
+          Pegá el contrato y la IA detecta qué ley lo rige, si es anterior o posterior a la
+          desregulación (DNU 70/2023), y revisa ajustes, plazos y cláusulas riesgosas.
         </p>
       </div>
 
@@ -70,11 +120,24 @@ export function ContractAnalyzer() {
             <CardDescription>Pegá las cláusulas o el contrato completo.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="fecha-contrato">Fecha de firma del contrato (opcional)</Label>
+              <Input
+                id="fecha-contrato"
+                type="date"
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
+                className="font-mono"
+              />
+              <p className="text-xs text-muted-foreground">
+                Ayuda a determinar con precisión qué régimen legal se aplica.
+              </p>
+            </div>
             <Textarea
               value={contrato}
               onChange={(e) => setContrato(e.target.value)}
               placeholder="Pegá acá el texto del contrato de alquiler..."
-              className="min-h-[260px] resize-y font-mono text-sm leading-relaxed"
+              className="min-h-[220px] resize-y font-mono text-sm leading-relaxed"
             />
             <div className="flex flex-wrap items-center gap-3">
               <Button onClick={analizar} disabled={loading || contrato.trim().length < 40}>
@@ -85,11 +148,7 @@ export function ContractAnalyzer() {
                 )}
                 {loading ? 'Analizando...' : 'Analizar contrato'}
               </Button>
-              <Button
-                variant="ghost"
-                onClick={() => setContrato(EJEMPLO)}
-                disabled={loading}
-              >
+              <Button variant="ghost" onClick={() => setContrato(EJEMPLO)} disabled={loading}>
                 Usar ejemplo
               </Button>
             </div>
@@ -98,8 +157,27 @@ export function ContractAnalyzer() {
 
         <Card className="min-h-[360px]">
           <CardHeader>
-            <CardTitle className="text-base">Resultado del análisis</CardTitle>
-            <CardDescription>Orientación para entender el contrato (no es asesoramiento legal).</CardDescription>
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <CardTitle className="text-base">Resultado del análisis</CardTitle>
+                <CardDescription>Orientación para entender el contrato (no es asesoramiento legal).</CardDescription>
+              </div>
+              {analisis &&
+                (isAuthed ? (
+                  <Button size="sm" variant="outline" onClick={guardar} disabled={saving || saved}>
+                    {saving ? (
+                      <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                    ) : (
+                      <Save className="size-4" aria-hidden="true" />
+                    )}
+                    {saved ? 'Guardado' : 'Guardar'}
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="outline" asChild>
+                    <a href="/sign-in">Iniciá sesión para guardar</a>
+                  </Button>
+                ))}
+            </div>
           </CardHeader>
           <CardContent>
             {!analisis && !loading && (
@@ -122,13 +200,61 @@ export function ContractAnalyzer() {
               <div className="flex flex-col gap-5">
                 <p className="text-sm leading-relaxed text-foreground">{analisis.resumen}</p>
 
+                <div className="rounded-lg border border-border bg-muted/40 p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Scale className="size-4 text-primary" aria-hidden="true" />
+                    <span className="text-sm font-semibold text-foreground">Régimen aplicable</span>
+                    <Badge variant={analisis.esPosteriorNuevaLey ? 'default' : 'secondary'}>
+                      {analisis.esPosteriorNuevaLey ? 'Posterior a la desregulación' : 'Anterior a la desregulación'}
+                    </Badge>
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-foreground">{analisis.regimenAplicable}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Fecha del contrato: {analisis.fechaContratoDetectada}
+                  </p>
+                  {analisis.analisisLegal.length > 0 && (
+                    <ul className="mt-3 flex flex-col gap-1.5">
+                      {analisis.analisisLegal.map((p, i) => (
+                        <li key={i} className="flex gap-2 text-sm leading-relaxed text-muted-foreground">
+                          <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
+                          {p}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {analisis.cumplimientoNormativo.length > 0 && (
+                  <div>
+                    <h3 className="mb-2 text-sm font-semibold text-foreground">Chequeo normativo</h3>
+                    <div className="flex flex-col gap-2">
+                      {analisis.cumplimientoNormativo.map((c, i) => {
+                        const cfg = estadoConfig[c.estado] ?? estadoConfig['no-determinado']
+                        const Icon = cfg.icon
+                        return (
+                          <div key={i} className="flex gap-2.5 rounded-lg border border-border p-3">
+                            <Icon className={`mt-0.5 size-4 shrink-0 ${cfg.className}`} aria-hidden="true" />
+                            <div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-sm font-medium text-foreground">{c.aspecto}</span>
+                                <span className={`text-xs ${cfg.className}`}>{cfg.label}</span>
+                              </div>
+                              <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">{c.detalle}</p>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <Separator />
+
                 <div className="grid grid-cols-2 gap-3">
                   <Dato label="Ajuste" value={analisis.indiceActualizacion} />
                   <Dato label="Frecuencia" value={analisis.frecuenciaAjuste} />
                   <Dato label="Duración" value={analisis.duracion} />
                 </div>
-
-                <Separator />
 
                 <div>
                   <h3 className="mb-2 text-sm font-semibold text-foreground">Puntos clave</h3>
@@ -164,9 +290,7 @@ export function ContractAnalyzer() {
 
                 {analisis.preguntasSugeridas.length > 0 && (
                   <div>
-                    <h3 className="mb-2 text-sm font-semibold text-foreground">
-                      Preguntá antes de firmar
-                    </h3>
+                    <h3 className="mb-2 text-sm font-semibold text-foreground">Preguntá antes de firmar</h3>
                     <ul className="flex flex-col gap-1.5">
                       {analisis.preguntasSugeridas.map((q, i) => (
                         <li key={i} className="flex gap-2 text-sm leading-relaxed text-muted-foreground">
@@ -175,6 +299,18 @@ export function ContractAnalyzer() {
                         </li>
                       ))}
                     </ul>
+                  </div>
+                )}
+
+                {isAuthed && !saved && (
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="titulo-analisis">Título para guardar (opcional)</Label>
+                    <Input
+                      id="titulo-analisis"
+                      value={titulo}
+                      onChange={(e) => setTitulo(e.target.value)}
+                      placeholder="Ej: Depto Corrientes 1234"
+                    />
                   </div>
                 )}
               </div>
