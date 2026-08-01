@@ -3,13 +3,14 @@ import { Home } from 'lucide-react'
 import { UserMenu } from '@/components/user-menu'
 import { cn } from '@/lib/utils'
 
-type NavKey = 'contrato' | 'condiciones' | 'precios' | 'simulador'
+type NavKey = 'contrato' | 'condiciones' | 'precios' | 'simulador' | 'inmobiliaria'
 
 const NAV: { key: NavKey; label: string; href: string }[] = [
   { key: 'contrato', label: 'Revisar contrato', href: '/contrato' },
   { key: 'condiciones', label: 'Evaluar condiciones', href: '/condiciones' },
   { key: 'precios', label: 'Precios por zona', href: '/precios' },
   { key: 'simulador', label: 'Simulador', href: '/simulador' },
+  { key: 'inmobiliaria', label: 'Inmobiliaria', href: '/inmobiliaria' },
 ]
 
 export function SiteHeader({
