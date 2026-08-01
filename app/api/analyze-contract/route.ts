@@ -2,7 +2,7 @@ import { generateText, Output } from 'ai'
 import { z } from 'zod'
 import { marcoLegalParaPrompt, regimenPorFecha } from '@/lib/ley-alquileres'
 
-export const maxDuration = 30
+export const maxDuration = 60
 
 const analysisSchema = z.object({
   resumen: z.string().describe('Resumen del contrato en 2-3 oraciones, en español rioplatense claro.'),
@@ -51,12 +51,27 @@ const analysisSchema = z.object({
     .describe('Preguntas que el inquilino debería hacerle al propietario o inmobiliaria antes de firmar.'),
 })
 
-export async function POST(req: Request) {
-  const { contrato, fechaContrato } = await req.json()
+const SYSTEM =
+  'Sos un asistente legal experto en contratos de locación de vivienda en Argentina. ' +
+  'Explicás en español rioplatense, claro y sin jerga. Tu objetivo es proteger al inquilino: ' +
+  'detectás ajustes, plazos, garantías, cláusulas abusivas y riesgos, y evaluás el contrato ' +
+  'contra el régimen legal que le corresponde según su fecha de firma. No inventás datos: si algo ' +
+  'no figura en el texto, lo marcás como "No especificado". No das asesoramiento legal vinculante, ' +
+  'sino orientación para entender el contrato.\n\n' +
+  'LÍNEA DE TIEMPO NORMATIVA DE ALQUILERES EN ARGENTINA (según fecha de firma del contrato):\n' +
+  marcoLegalParaPrompt() +
+  '\n\nLa "nueva ley" o desregulación es el DNU 70/2023 (vigente desde el 29/12/2023), que derogó ' +
+  'la Ley de Alquileres y habilitó el libre pacto de plazo, moneda, índice y frecuencia de ajuste.'
 
-  if (!contrato || typeof contrato !== 'string' || contrato.trim().length < 40) {
+export async function POST(req: Request) {
+  const { contrato, fileData, mediaType, fechaContrato } = await req.json()
+
+  const tieneTexto = typeof contrato === 'string' && contrato.trim().length >= 40
+  const tieneArchivo = typeof fileData === 'string' && fileData.length > 0 && typeof mediaType === 'string'
+
+  if (!tieneTexto && !tieneArchivo) {
     return Response.json(
-      { error: 'Pegá el texto del contrato (al menos algunas cláusulas) para poder analizarlo.' },
+      { error: 'Pegá el texto del contrato o subí un archivo (PDF/imagen) para poder analizarlo.' },
       { status: 400 },
     )
   }
@@ -72,32 +87,49 @@ export async function POST(req: Request) {
       `Usá esto como régimen aplicable y ${regimen.id === 'dnu-70-2023' ? 'marcá esPosteriorNuevaLey = true' : 'marcá esPosteriorNuevaLey = false'}.`
     : '\n\nNo se indicó la fecha de firma: inferila del texto y determiná el régimen aplicable según la línea de tiempo.'
 
+  const instruccion =
+    `Analizá el siguiente contrato de alquiler y devolvé el análisis estructurado, ` +
+    `comparando lo pactado con lo que exige o permite su régimen legal.${contextoFecha}`
+
+  // Construimos el contenido del mensaje: texto pegado y/o archivo adjunto.
+  const content: Array<
+    | { type: 'text'; text: string }
+    | { type: 'file'; data: string; mediaType: string }
+  > = []
+
+  if (tieneArchivo) {
+    content.push({
+      type: 'text',
+      text:
+        instruccion +
+        '\n\nEl contrato está en el archivo adjunto (puede ser un PDF o una foto/escaneo). ' +
+        'Leé todo su contenido, incluida la letra chica, y analizalo.',
+    })
+    content.push({ type: 'file', data: fileData, mediaType })
+  } else {
+    content.push({ type: 'text', text: `${instruccion}\n\n"""${contrato.slice(0, 12000)}"""` })
+  }
+
+  // Con archivos usamos un modelo multimodal (lee PDF e imágenes).
+  const model = tieneArchivo ? 'google/gemini-2.5-flash' : 'openai/gpt-4.1-mini'
+
   try {
     const { output } = await generateText({
-      model: 'openai/gpt-4.1-mini',
+      model,
       output: Output.object({ schema: analysisSchema }),
-      system:
-        'Sos un asistente legal experto en contratos de locación de vivienda en Argentina. ' +
-        'Explicás en español rioplatense, claro y sin jerga. Tu objetivo es proteger al inquilino: ' +
-        'detectás ajustes, plazos, garantías, cláusulas abusivas y riesgos, y evaluás el contrato ' +
-        'contra el régimen legal que le corresponde según su fecha de firma. No inventás datos: si algo ' +
-        'no figura en el texto, lo marcás como "No especificado". No das asesoramiento legal vinculante, ' +
-        'sino orientación para entender el contrato.\n\n' +
-        'LÍNEA DE TIEMPO NORMATIVA DE ALQUILERES EN ARGENTINA (según fecha de firma del contrato):\n' +
-        marcoLegalParaPrompt() +
-        '\n\nLa "nueva ley" o desregulación es el DNU 70/2023 (vigente desde el 29/12/2023), que derogó ' +
-        'la Ley de Alquileres y habilitó el libre pacto de plazo, moneda, índice y frecuencia de ajuste.',
-      prompt:
-        `Analizá el siguiente contrato de alquiler y devolvé el análisis estructurado, ` +
-        `comparando lo pactado con lo que exige o permite su régimen legal.${contextoFecha}\n\n` +
-        `"""${contrato.slice(0, 12000)}"""`,
+      system: SYSTEM,
+      messages: [{ role: 'user', content }],
     })
 
     return Response.json(output)
   } catch (err) {
     console.log('[v0] Error analizando contrato:', err instanceof Error ? err.message : err)
     return Response.json(
-      { error: 'No se pudo analizar el contrato. Verificá que AI_GATEWAY_API_KEY esté configurada.' },
+      {
+        error:
+          'No se pudo analizar el contrato. Si el archivo es una imagen poco legible, probá con mejor calidad. ' +
+          'Verificá también que el AI Gateway esté habilitado (tarjeta o AI_GATEWAY_API_KEY).',
+      },
       { status: 500 },
     )
   }
