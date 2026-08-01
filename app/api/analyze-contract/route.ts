@@ -74,7 +74,7 @@ export async function POST(req: Request) {
 
   try {
     const { output } = await generateText({
-      model: 'openai/gpt-4.1-mini',
+      model: 'google/gemini-3.5-flash',
       output: Output.object({ schema: analysisSchema }),
       system:
         'Sos un asistente legal experto en contratos de locación de vivienda en Argentina. ' +
