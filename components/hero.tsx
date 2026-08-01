@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ArrowRight, FileSearch, LineChart, ListChecks, MapPin } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 
 const cuadros = [
   {
@@ -57,12 +57,10 @@ export function Hero() {
               </span>
               <h2 className="mt-4 text-lg font-semibold text-card-foreground">{c.titulo}</h2>
               <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{c.texto}</p>
-              <Button asChild className="mt-5 w-full">
-                <Link href={c.href}>
-                  {c.boton}
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </Link>
-              </Button>
+              <Link href={c.href} className={buttonVariants({ className: 'mt-5 w-full' })}>
+                {c.boton}
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
             </div>
           ))}
         </div>

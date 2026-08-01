@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Lock } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
 export function AccountRequired({
@@ -26,12 +26,12 @@ export function AccountRequired({
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
-          <Button asChild>
-            <Link href={`/sign-up?next=${next}`}>Crear cuenta gratis</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href={`/sign-in?next=${next}`}>Ya tengo cuenta</Link>
-          </Button>
+          <Link href={`/sign-up?next=${next}`} className={buttonVariants()}>
+            Crear cuenta gratis
+          </Link>
+          <Link href={`/sign-in?next=${next}`} className={buttonVariants({ variant: 'outline' })}>
+            Ya tengo cuenta
+          </Link>
         </div>
       </CardContent>
     </Card>
