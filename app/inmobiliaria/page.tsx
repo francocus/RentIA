@@ -1,12 +1,31 @@
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowRight, Building2, ClipboardCheck, Clock, CreditCard, Database, Sparkles } from 'lucide-react'
+import { ArrowRight, Building2, ClipboardCheck, Clock, CreditCard, Database, History, Sparkles } from 'lucide-react'
 
 import { auth } from '@/lib/auth'
 import { getSubscriptionStatus } from '@/lib/subscription'
 import { buttonVariants } from '@/components/ui/button'
 import { PageShell } from '@/components/page-shell'
+
+import type { LucideIcon } from 'lucide-react'
+
+function FeatureItem({ href, icon: Icon, title, desc }: { href: string; icon: LucideIcon; title: string; desc: string }) {
+  return (
+    <Link
+      href={href}
+      className="group flex items-start gap-3 rounded-lg border border-border bg-background p-4 transition-colors hover:border-primary/40 hover:bg-primary/5"
+    >
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <Icon className="size-4" aria-hidden="true" />
+      </span>
+      <div>
+        <p className="text-sm font-semibold text-foreground">{title}</p>
+        <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{desc}</p>
+      </div>
+    </Link>
+  )
+}
 
 const beneficios = [
   {
@@ -62,9 +81,13 @@ export default async function InmobiliariaPage() {
                 Analizar nuevo postulante
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
-              <Link href="/inmobiliaria/contratos" className={buttonVariants({ variant: 'secondary', size: 'lg' })}>
+              <Link href="/inmobiliaria/historial" className={buttonVariants({ variant: 'secondary', size: 'lg' })}>
+                <History className="size-4" aria-hidden="true" />
+                Historial de análisis
+              </Link>
+              <Link href="/inmobiliaria/contratos" className={buttonVariants({ variant: 'outline', size: 'lg' })}>
                 <Database className="size-4" aria-hidden="true" />
-                Ver base de contratos
+                Base de contratos
               </Link>
               <Link
                 href="/inmobiliaria/upgrade"
@@ -115,22 +138,46 @@ export default async function InmobiliariaPage() {
           </Link>
 
           <div className="mt-4 rounded-xl border border-border bg-card p-6">
-            <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h2 className="font-semibold text-card-foreground">¿Cómo funciona?</h2>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                  Ingresá los datos del postulante, marcá los documentos recibidos y presioná
-                  &ldquo;Analizar con IA&rdquo;. En segundos tenés un resumen del expediente con
-                  observaciones y recomendaciones.
-                </p>
-              </div>
-              <Link
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+              Funcionalidades incluidas en tu plan
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <FeatureItem
                 href="/inmobiliaria/postulante"
-                className={buttonVariants({ className: 'mt-4 shrink-0 md:mt-0' })}
-              >
-                Empezar ahora
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </Link>
+                icon={Sparkles}
+                title="Análisis con IA"
+                desc="Evaluá nombre, ingresos, tipo de empleo y solvencia en segundos."
+              />
+              <FeatureItem
+                href="/inmobiliaria/postulante"
+                icon={ClipboardCheck}
+                title="Detección de documentos"
+                desc="La IA detecta automáticamente qué documentos faltan en el expediente."
+              />
+              <FeatureItem
+                href="/inmobiliaria/postulante"
+                icon={ArrowRight}
+                title="Informe descargable"
+                desc="Cada análisis genera un informe completo con observaciones y recomendación."
+              />
+              <FeatureItem
+                href="/inmobiliaria/postulante"
+                icon={Clock}
+                title="Verificación legal"
+                desc="Contrasta el expediente contra el marco legal vigente (DNU 70/2023, InfoLEG)."
+              />
+              <FeatureItem
+                href="/inmobiliaria/historial"
+                icon={History}
+                title="Historial guardado"
+                desc="Todos los análisis se guardan automáticamente. Accedé a ellos cuando quieras."
+              />
+              <FeatureItem
+                href="/inmobiliaria/contratos"
+                icon={Database}
+                title="Base de contratos"
+                desc="Accedé a contratos reales scaneados por inquilinos de Rosario para comparar condiciones."
+              />
             </div>
           </div>
         </div>

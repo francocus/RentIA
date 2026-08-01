@@ -103,6 +103,30 @@ export const scannedContracts = pgTable('scanned_contracts', {
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 
+// Historial de análisis de postulantes guardados por inmobiliarias.
+export const applicantAnalyses = pgTable('applicant_analyses', {
+  id: serial('id').primaryKey(),
+  userId: text('userId').notNull(),
+  nombre: text('nombre').notNull(),
+  dni: text('dni').notNull(),
+  email: text('email'),
+  telefono: text('telefono'),
+  ingresos: text('ingresos'),
+  tipoEmpleo: text('tipoEmpleo'),
+  antiguedad: text('antiguedad'),
+  documentos: jsonb('documentos').notNull().default([]),
+  estado: text('estado').notNull(), // 'aprobado' | 'revisar' | 'rechazado'
+  resumen: text('resumen'),
+  observaciones: text('observaciones'),
+  recomendacion: text('recomendacion'),
+  documentosRecibidos: jsonb('documentosRecibidos').notNull().default([]),
+  ingresoDetectado: text('ingresoDetectado'),
+  antiguedadLaboral: text('antiguedadLaboral'),
+  verificacionLegal: jsonb('verificacionLegal'),
+  resultado: jsonb('resultado').notNull(),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+})
+
 // Contratos de referencia de mercado. El comparador calcula promedio/min/max
 // por zona directamente desde esta tabla (datos sembrados).
 export const marketListings = pgTable('market_listings', {
