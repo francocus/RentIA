@@ -2,11 +2,11 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight, Building2, ClipboardCheck, Clock, CreditCard, Sparkles } from 'lucide-react'
+
 import { auth } from '@/lib/auth'
 import { getSubscriptionStatus } from '@/lib/subscription'
 import { buttonVariants } from '@/components/ui/button'
 import { PageShell } from '@/components/page-shell'
-import { createPortalSession } from '@/app/actions/stripe'
 
 const beneficios = [
   {
@@ -62,15 +62,13 @@ export default async function InmobiliariaPage() {
                 Analizar nuevo postulante
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
-              <form action={createPortalSession}>
-                <button
-                  type="submit"
-                  className={buttonVariants({ variant: 'outline', size: 'lg' })}
-                >
-                  <CreditCard className="size-4" aria-hidden="true" />
-                  Gestionar suscripción
-                </button>
-              </form>
+              <Link
+                href="/inmobiliaria/upgrade"
+                className={buttonVariants({ variant: 'outline', size: 'lg' })}
+              >
+                <CreditCard className="size-4" aria-hidden="true" />
+                Gestionar suscripción
+              </Link>
             </div>
           </div>
 

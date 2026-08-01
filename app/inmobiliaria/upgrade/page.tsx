@@ -1,11 +1,10 @@
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowRight, Building2, Check, Lock } from 'lucide-react'
+import { Building2, Check, Lock, ShieldCheck } from 'lucide-react'
 import { auth } from '@/lib/auth'
 import { getSubscriptionStatus } from '@/lib/subscription'
-import { buttonVariants } from '@/components/ui/button'
-import { createCheckoutSession } from '@/app/actions/stripe'
+import { DemoCheckoutForm } from '@/components/inmobiliaria/demo-checkout-form'
 
 const incluido = [
   'Análisis de postulantes con IA ilimitado',
@@ -18,79 +17,74 @@ const incluido = [
 
 export default async function UpgradePage() {
   const session = await auth.api.getSession({ headers: await headers() })
-
   if (!session?.user) redirect('/sign-up/inmobiliaria')
 
   const { isInmobiliaria } = await getSubscriptionStatus()
   if (isInmobiliaria) redirect('/inmobiliaria')
 
   return (
-    <main className="flex min-h-svh items-start justify-center bg-background px-4 py-16">
-      <div className="w-full max-w-lg">
-        {/* Header */}
-        <div className="mb-8 flex flex-col items-center text-center">
-          <span className="mb-3 flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Lock className="size-6" aria-hidden="true" />
-          </span>
-          <h1 className="text-balance text-3xl font-extrabold tracking-tight text-foreground">
-            Activá tu plan Inmobiliaria
-          </h1>
-          <p className="mt-3 text-pretty text-base leading-relaxed text-muted-foreground">
-            Hola, <strong className="text-foreground">{session.user.name}</strong>. Tu cuenta está
-            creada. Ahora activá la suscripción para desbloquear el analizador de postulantes.
-          </p>
-        </div>
+    <main className="min-h-svh bg-background px-4 py-16">
+      <div className="mx-auto grid w-full max-w-4xl gap-8 lg:grid-cols-[1fr_1.1fr]">
 
-        {/* Plan card */}
-        <div className="rounded-2xl border border-border bg-card p-8">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <Building2 className="size-5 text-primary" aria-hidden="true" />
-                <span className="font-semibold text-card-foreground">Plan Inmobiliaria</span>
-              </div>
-              <div className="mt-3 flex items-baseline gap-1">
-                <span className="text-4xl font-extrabold text-foreground">$9.900</span>
-                <span className="text-sm text-muted-foreground">ARS / mes</span>
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Primeros 7 días gratis. Cancelá cuando quieras.
-              </p>
+        {/* ── Columna izquierda: plan info ── */}
+        <div className="flex flex-col gap-6">
+          <div>
+            <div className="flex items-center gap-2">
+              <Building2 className="size-5 text-primary" aria-hidden="true" />
+              <span className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                Plan Inmobiliaria
+              </span>
             </div>
+            <div className="mt-3 flex items-baseline gap-1.5">
+              <span className="text-5xl font-extrabold tracking-tight text-foreground">$9.900</span>
+              <span className="text-base text-muted-foreground">ARS / mes</span>
+            </div>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              Primeros 7 días gratis &mdash; cancelá cuando quieras.
+            </p>
           </div>
 
-          <div className="mt-6 flex flex-col gap-2.5">
-            {incluido.map((item) => (
-              <div key={item} className="flex items-start gap-2.5">
-                <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <Check className="size-3" aria-hidden="true" />
-                </span>
-                <span className="text-sm leading-relaxed text-muted-foreground">{item}</span>
-              </div>
-            ))}
+          <div className="rounded-xl border border-border bg-card p-5">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              Incluido en el plan
+            </p>
+            <ul className="flex flex-col gap-2.5">
+              {incluido.map((item) => (
+                <li key={item} className="flex items-start gap-2.5">
+                  <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Check className="size-3" aria-hidden="true" />
+                  </span>
+                  <span className="text-sm leading-relaxed text-muted-foreground">{item}</span>
+                </li>
+              ))}
+            </ul>
           </div>
 
-          <form action={createCheckoutSession} className="mt-8">
-            <button
-              type="submit"
-              className={buttonVariants({ size: 'lg', className: 'w-full' })}
-            >
-              Activar plan — 7 días gratis
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </button>
-          </form>
-
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            Pago seguro vía Stripe. Podés cancelar en cualquier momento.
-          </p>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <ShieldCheck className="size-4 shrink-0 text-primary" aria-hidden="true" />
+            Hola, <strong className="text-foreground">{session.user.name}</strong>. Tu cuenta ya
+            está creada. Solo falta activar el plan.
+          </div>
         </div>
 
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          <Link href="/" className="font-medium text-foreground underline-offset-4 hover:underline">
-            Volver al inicio
-          </Link>
-        </p>
+        {/* ── Columna derecha: checkout form ── */}
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <div className="mb-5 flex items-center gap-2">
+            <Lock className="size-4 text-muted-foreground" aria-hidden="true" />
+            <p className="text-sm font-medium text-muted-foreground">Datos de pago</p>
+          </div>
+          <DemoCheckoutForm />
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Esta es una demo. No se realizará ningún cobro real.
+          </p>
+        </div>
       </div>
+
+      <p className="mt-10 text-center text-sm text-muted-foreground">
+        <Link href="/" className="font-medium text-foreground underline-offset-4 hover:underline">
+          Volver al inicio
+        </Link>
+      </p>
     </main>
   )
 }
