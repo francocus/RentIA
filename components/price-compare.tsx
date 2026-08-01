@@ -36,7 +36,7 @@ export function PriceCompare() {
   const zonas = data?.zonas ?? []
 
   const [zonaId, setZonaId] = useState<string | null>(null)
-  const [precio, setPrecio] = useState(650000)
+  const [precio, setPrecio] = useState(400000)
 
   // Zona seleccionada: la elegida por el usuario o la primera disponible.
   const zona = zonas.find((z) => z.zonaId === zonaId) ?? zonas[0]
@@ -62,11 +62,11 @@ export function PriceCompare() {
   return (
     <section id="precios" className="scroll-mt-20">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold tracking-tight text-foreground">Comparador de precios por zona</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">Comparador de precios por zona en Rosario</h2>
         <p className="mt-1 text-muted-foreground">
           Promedios calculados en base a{' '}
           <span className="font-medium text-foreground">{totalMuestras || '—'}</span> contratos reales
-          registrados por zona.
+          registrados por barrio de Rosario.
         </p>
       </div>
 
