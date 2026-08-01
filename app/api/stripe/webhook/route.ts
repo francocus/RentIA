@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { stripe } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 import { db } from '@/lib/db'
 import { subscription, user } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
   if (!sig || !process.env.STRIPE_WEBHOOK_SECRET) {
     return NextResponse.json({ error: 'Missing signature or secret' }, { status: 400 })
   }
+  const stripe = getStripe()
 
   let event: Stripe.Event
   try {

@@ -87,8 +87,10 @@ Sé objetivo, detallado y usa lenguaje claro. El análisis es para uso interno d
 
 export async function POST(req: Request) {
   try {
-    // Autenticación
     const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) {
+      return Response.json({ error: 'Necesitás iniciar sesión.' }, { status: 401 })
+    }
 
     const body = await req.json()
     const { postulante, documentos, alquilerEstimado } = body as {
@@ -136,29 +138,27 @@ Realizá un análisis completo del expediente y verificá el marco legal aplicab
       messages: [{ role: 'user', content: prompt }],
     })
 
-    // Guardar en historial si hay sesión activa
-    if (session?.user) {
-      await db.insert(applicantAnalyses).values({
-        userId: session.user.id,
-        nombre: postulante.nombre,
-        dni: postulante.dni,
-        email: postulante.email || null,
-        telefono: postulante.telefono || null,
-        ingresos: postulante.ingresos || null,
-        tipoEmpleo: postulante.tipoEmpleo || null,
-        antiguedad: postulante.antiguedad || null,
-        documentos: documentos,
-        estado: output.estado,
-        resumen: output.resumen || null,
-        observaciones: output.observaciones || null,
-        recomendacion: output.recomendacion || null,
-        documentosRecibidos: output.documentosRecibidos,
-        ingresoDetectado: output.ingresoDetectado || null,
-        antiguedadLaboral: output.antiguedadLaboral || null,
-        verificacionLegal: output.verificacionLegal,
-        resultado: output as Record<string, unknown>,
-      })
-    }
+    // Guardar en historial
+    await db.insert(applicantAnalyses).values({
+      userId: session.user.id,
+      nombre: postulante.nombre,
+      dni: postulante.dni,
+      email: postulante.email || null,
+      telefono: postulante.telefono || null,
+      ingresos: postulante.ingresos || null,
+      tipoEmpleo: postulante.tipoEmpleo || null,
+      antiguedad: postulante.antiguedad || null,
+      documentos: documentos,
+      estado: output.estado,
+      resumen: output.resumen || null,
+      observaciones: output.observaciones || null,
+      recomendacion: output.recomendacion || null,
+      documentosRecibidos: output.documentosRecibidos,
+      ingresoDetectado: output.ingresoDetectado || null,
+      antiguedadLaboral: output.antiguedadLaboral || null,
+      verificacionLegal: output.verificacionLegal,
+      resultado: output as Record<string, unknown>,
+    })
 
     return Response.json(output)
   } catch (err) {
