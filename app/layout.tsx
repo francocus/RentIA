@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'RentIA — Alquilá con información, no a ciegas',
   description:
-    'Asistente con IA para alquilar en Argentina: entendé tu contrato, compará precios por zona y simulá los ajustes futuros de tu alquiler.',
+    'Asistente con IA para alquilar en Rosario: entendé tu contrato, compará precios por barrio y simulá los ajustes futuros de tu alquiler.',
   generator: 'v0.app',
   icons: {
     icon: [

@@ -14,15 +14,16 @@ export type Zona = {
   variacionAnual: number
 }
 
+// Barrios y zonas de la ciudad de Rosario, Santa Fe.
 export const zonas: Zona[] = [
-  { id: 'palermo', nombre: 'Palermo', ciudad: 'CABA', precioPromedio: 620000, precioMin: 480000, precioMax: 820000, variacionAnual: 92 },
-  { id: 'caballito', nombre: 'Caballito', ciudad: 'CABA', precioPromedio: 510000, precioMin: 410000, precioMax: 660000, variacionAnual: 88 },
-  { id: 'belgrano', nombre: 'Belgrano', ciudad: 'CABA', precioPromedio: 590000, precioMin: 470000, precioMax: 780000, variacionAnual: 90 },
-  { id: 'villa-urquiza', nombre: 'Villa Urquiza', ciudad: 'CABA', precioPromedio: 470000, precioMin: 380000, precioMax: 600000, variacionAnual: 86 },
-  { id: 'la-plata-centro', nombre: 'La Plata Centro', ciudad: 'Buenos Aires', precioPromedio: 340000, precioMin: 260000, precioMax: 450000, variacionAnual: 79 },
-  { id: 'rosario-centro', nombre: 'Rosario Centro', ciudad: 'Santa Fe', precioPromedio: 360000, precioMin: 280000, precioMax: 470000, variacionAnual: 81 },
-  { id: 'cordoba-nueva-cordoba', nombre: 'Nueva Córdoba', ciudad: 'Córdoba', precioPromedio: 330000, precioMin: 250000, precioMax: 440000, variacionAnual: 83 },
-  { id: 'mendoza-centro', nombre: 'Mendoza Centro', ciudad: 'Mendoza', precioPromedio: 310000, precioMin: 240000, precioMax: 420000, variacionAnual: 77 },
+  { id: 'centro', nombre: 'Centro', ciudad: 'Rosario', precioPromedio: 360000, precioMin: 280000, precioMax: 470000, variacionAnual: 81 },
+  { id: 'pichincha', nombre: 'Pichincha', ciudad: 'Rosario', precioPromedio: 400000, precioMin: 320000, precioMax: 520000, variacionAnual: 84 },
+  { id: 'puerto-norte', nombre: 'Puerto Norte', ciudad: 'Rosario', precioPromedio: 520000, precioMin: 420000, precioMax: 700000, variacionAnual: 88 },
+  { id: 'echesortu', nombre: 'Echesortu', ciudad: 'Rosario', precioPromedio: 320000, precioMin: 250000, precioMax: 410000, variacionAnual: 79 },
+  { id: 'abasto', nombre: 'Abasto', ciudad: 'Rosario', precioPromedio: 310000, precioMin: 240000, precioMax: 400000, variacionAnual: 78 },
+  { id: 'fisherton', nombre: 'Fisherton', ciudad: 'Rosario', precioPromedio: 430000, precioMin: 340000, precioMax: 580000, variacionAnual: 82 },
+  { id: 'lourdes', nombre: 'Lourdes', ciudad: 'Rosario', precioPromedio: 350000, precioMin: 270000, precioMax: 450000, variacionAnual: 80 },
+  { id: 'martin', nombre: 'Barrio Martin', ciudad: 'Rosario', precioPromedio: 450000, precioMin: 360000, precioMax: 600000, variacionAnual: 85 },
 ]
 
 // Índices de actualización disponibles y su tasa mensual estimada (%).

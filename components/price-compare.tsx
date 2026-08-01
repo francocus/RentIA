@@ -26,8 +26,8 @@ import {
 import { formatARS, formatPct, zonas } from '@/lib/rent-data'
 
 export function PriceCompare() {
-  const [zonaId, setZonaId] = useState('palermo')
-  const [precio, setPrecio] = useState(650000)
+  const [zonaId, setZonaId] = useState('centro')
+  const [precio, setPrecio] = useState(400000)
 
   const zona = zonas.find((z) => z.id === zonaId) ?? zonas[0]
 
@@ -48,9 +48,9 @@ export function PriceCompare() {
   return (
     <section id="precios" className="scroll-mt-20">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold tracking-tight text-foreground">Comparador de precios por zona</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">Comparador de precios por zona en Rosario</h2>
         <p className="mt-1 text-muted-foreground">
-          Fijate si el valor que te piden está alineado con lo que se paga en la zona.
+          Fijate si el valor que te piden está alineado con lo que se paga en cada barrio de Rosario.
         </p>
       </div>
 
@@ -63,14 +63,14 @@ export function PriceCompare() {
           <CardContent className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
               <Label htmlFor="zona">Zona</Label>
-              <Select value={zonaId} onValueChange={(v) => setZonaId(v ?? 'palermo')}>
+              <Select value={zonaId} onValueChange={(v) => setZonaId(v ?? 'centro')}>
                 <SelectTrigger id="zona">
-                  <SelectValue />
+                  <SelectValue>{zona.nombre}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {zonas.map((z) => (
                     <SelectItem key={z.id} value={z.id}>
-                      {z.nombre} — {z.ciudad}
+                      {z.nombre}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -141,8 +141,8 @@ export function PriceCompare() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{zona.nombre} · {zona.ciudad}</CardTitle>
-              <CardDescription>Tu precio comparado con el rango de la zona.</CardDescription>
+              <CardTitle className="text-base">{zona.nombre} · Rosario</CardTitle>
+              <CardDescription>Tu precio comparado con el rango del barrio.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[300px] w-full">
