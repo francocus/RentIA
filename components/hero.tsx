@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, FileSearch, LineChart, ListChecks, MapPin } from 'lucide-react'
+import { ArrowRight, Building2, FileSearch, LineChart, ListChecks, MapPin, User } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
 
 const cuadros = [
@@ -46,7 +46,53 @@ export function Hero() {
           </p>
         </div>
 
-        <div className="mt-12 grid gap-4 md:grid-cols-3">
+        {/* Accesos principales */}
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:max-w-2xl">
+          <Link
+            href="/contrato"
+            className="group flex items-center gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/50"
+          >
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <User className="size-6" aria-hidden="true" />
+            </span>
+            <div className="flex-1">
+              <p className="font-semibold text-card-foreground">Soy Inquilino</p>
+              <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
+                Analizá tu contrato, comparás precios y simulás ajustes.
+              </p>
+            </div>
+            <ArrowRight
+              className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary"
+              aria-hidden="true"
+            />
+          </Link>
+          <Link
+            href="/inmobiliaria"
+            className="group flex items-center gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/50"
+          >
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Building2 className="size-6" aria-hidden="true" />
+            </span>
+            <div className="flex-1">
+              <p className="font-semibold text-card-foreground">Soy Inmobiliaria</p>
+              <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
+                Analizá postulantes con IA y reducí el trabajo administrativo.
+              </p>
+            </div>
+            <ArrowRight
+              className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary"
+              aria-hidden="true"
+            />
+          </Link>
+        </div>
+
+        <div className="mt-12">
+          <p className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            <User className="size-3.5" aria-hidden="true" />
+            Herramientas para inquilinos
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
           {cuadros.map((c) => (
             <div
               key={c.titulo}
