@@ -42,6 +42,7 @@ export type Analisis = {
   puntosClave: string[]
   clausulasRiesgosas: { titulo: string; detalle: string; severidad: 'alta' | 'media' | 'baja' }[]
   preguntasSugeridas: string[]
+  fuentesLegales?: { norma: string; articulos: string; relevancia: string }[]
 }
 
 const EJEMPLO = `CONTRATO DE LOCACIÓN DE VIVIENDA. Entre el Sr. Locador y el Sr. Locatario se conviene la locación del inmueble sito en Av. Corrientes 1234, CABA. PLAZO: el presente contrato tendrá una duración de veinticuatro (24) meses a partir del 01/06/2025. PRECIO: el alquiler mensual inicial se fija en PESOS CUATROCIENTOS MIL ($400.000). ACTUALIZACIÓN: el valor se ajustará trimestralmente conforme al Índice de Contratos de Locación (ICL) publicado por el BCRA. GARANTÍA: el locatario deberá presentar garantía propietaria en CABA. DEPÓSITO: equivalente a un (1) mes de alquiler. RESCISIÓN ANTICIPADA: en caso de rescisión antes de los 6 meses, el locatario abonará dos meses de alquiler en concepto de multa. Los gastos de expensas extraordinarias estarán a cargo del locatario.`
@@ -396,6 +397,31 @@ export function ContractTab({ isAuthed = false }: { isAuthed?: boolean }) {
                       </li>
                     ))}
                   </ul>
+                </div>
+              )}
+
+              {analisis.fuentesLegales && analisis.fuentesLegales.length > 0 && (
+                <div>
+                  <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                    <Scale className="size-4 text-primary" aria-hidden="true" />
+                    Fuentes legales consultadas
+                  </h3>
+                  <div className="flex flex-col gap-2">
+                    {analisis.fuentesLegales.map((f, i) => (
+                      <div key={i} className="rounded-lg border border-border bg-muted/40 p-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-sm font-medium text-foreground">{f.norma}</span>
+                          {f.articulos && (
+                            <span className="font-mono text-xs text-muted-foreground">{f.articulos}</span>
+                          )}
+                        </div>
+                        <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">{f.relevancia}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Verificado contra InfoLEG, la base oficial de legislación nacional del Ministerio de Justicia.
+                  </p>
                 </div>
               )}
 
