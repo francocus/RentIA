@@ -9,6 +9,8 @@ export const user = pgTable('user', {
   email: text('email').notNull().unique(),
   emailVerified: boolean('emailVerified').notNull().default(false),
   image: text('image'),
+  // 'inquilino' | 'inmobiliaria'
+  role: text('role').notNull().default('inquilino'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
@@ -66,6 +68,38 @@ export const analyses = pgTable('analyses', {
   esPosteriorNuevaLey: boolean('esPosteriorNuevaLey'),
   resumen: text('resumen'),
   resultado: jsonb('resultado').notNull(),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+})
+
+// Suscripciones Stripe para cuentas inmobiliaria.
+export const subscription = pgTable('subscription', {
+  id: text('id').primaryKey(),
+  userId: text('userId').notNull(),
+  stripeCustomerId: text('stripeCustomerId'),
+  stripeSubscriptionId: text('stripeSubscriptionId'),
+  stripePriceId: text('stripePriceId'),
+  // 'inactive' | 'active' | 'past_due' | 'canceled'
+  status: text('status').notNull().default('inactive'),
+  currentPeriodEnd: timestamp('currentPeriodEnd'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+// Contratos escaneados por inquilinos — fuente de datos para inmobiliarias.
+// Los campos de usuario están anonimizados (no se expone userId).
+export const scannedContracts = pgTable('scanned_contracts', {
+  id: serial('id').primaryKey(),
+  userId: text('userId').notNull(),
+  barrio: text('barrio'),
+  zona: text('zona'),
+  ambientes: integer('ambientes'),
+  m2: integer('m2'),
+  alquiler: integer('alquiler'),
+  ajuste: text('ajuste'),
+  plazo: text('plazo'),
+  regimen: text('regimen'),
+  fechaContrato: text('fechaContrato'),
+  resumen: text('resumen'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 

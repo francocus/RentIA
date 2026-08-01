@@ -1,6 +1,7 @@
 import { google } from '@ai-sdk/google'
 import { generateText, Output, isStepCount } from 'ai'
 import { z } from 'zod'
+import { auth } from '@/lib/auth'
 import { marcoLegalParaPrompt, regimenPorFecha } from '@/lib/ley-alquileres'
 import { conectarFuentesLegales } from '@/lib/legal-mcp'
 
@@ -86,8 +87,8 @@ const SYSTEM =
   'resolución anticipada). Citá lo consultado en el campo fuentesLegales del resultado.'
 
 export async function POST(req: Request) {
-  const user = await getSessionUserFromRequest(req)
-  if (!user) {
+  const session = await auth.api.getSession({ headers: req.headers as any })
+  if (!session?.user) {
     return Response.json(
       { error: 'Necesitás una cuenta para usar el análisis con IA. Creá tu cuenta gratis.' },
       { status: 401 },

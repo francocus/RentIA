@@ -3,6 +3,15 @@ import { pool } from '@/lib/db'
 
 export const auth = betterAuth({
   database: pool,
+  user: {
+    additionalFields: {
+      role: {
+        type: 'string',
+        defaultValue: 'inquilino',
+        input: true, // permite pasarlo en signUp
+      },
+    },
+  },
   baseURL:
     process.env.BETTER_AUTH_URL ??
     (process.env.VERCEL_PROJECT_PRODUCTION_URL
