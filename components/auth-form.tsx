@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 
-export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
+export function AuthForm({ mode, next = '/' }: { mode: 'sign-in' | 'sign-up'; next?: string }) {
   const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -36,7 +36,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
       return
     }
 
-    router.push('/')
+    router.push(next)
     router.refresh()
   }
 
@@ -111,7 +111,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
         <p className="mt-6 text-center text-sm text-muted-foreground">
           {isSignUp ? '¿Ya tenés cuenta? ' : '¿No tenés cuenta? '}
           <Link
-            href={isSignUp ? '/sign-in' : '/sign-up'}
+            href={`${isSignUp ? '/sign-in' : '/sign-up'}${next !== '/' ? `?next=${encodeURIComponent(next)}` : ''}`}
             className="font-medium text-foreground underline-offset-4 hover:underline"
           >
             {isSignUp ? 'Ingresá' : 'Registrate'}

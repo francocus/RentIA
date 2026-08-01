@@ -4,6 +4,10 @@
 
 export type RegimenId = 'anterior' | 'ley-27551' | 'ley-27737' | 'dnu-70-2023'
 
+// Última vez que cambió el marco normativo de alquileres (DNU 70/2023).
+// Se muestra al usuario como "última actualización de las leyes".
+export const ULTIMA_ACTUALIZACION_NORMATIVA = '29 de diciembre de 2023'
+
 export type Regimen = {
   id: RegimenId
   nombre: string
