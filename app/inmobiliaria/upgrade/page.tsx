@@ -7,12 +7,14 @@ import { getSubscriptionStatus } from '@/lib/subscription'
 import { DemoCheckoutForm } from '@/components/inmobiliaria/demo-checkout-form'
 
 const incluido = [
-  'Análisis de postulantes con IA ilimitado',
-  'Detección automática de documentos faltantes',
-  'Informes con observaciones y recomendaciones',
-  'Verificación contra legislación vigente',
-  'Historial de análisis guardado',
-  'Soporte por email',
+  { texto: 'Acceso a la base de contratos scaneados por inquilinos de Rosario', highlight: true },
+  { texto: 'Filtros por barrio, régimen, precio y fecha en todos los contratos', highlight: true },
+  { texto: 'Análisis de postulantes con IA ilimitado', highlight: false },
+  { texto: 'Detección automática de documentos faltantes', highlight: false },
+  { texto: 'Informes con observaciones y recomendaciones de la IA', highlight: false },
+  { texto: 'Verificación contra legislación vigente (InfoLEG)', highlight: false },
+  { texto: 'Historial de análisis guardado', highlight: false },
+  { texto: 'Soporte por email', highlight: false },
 ]
 
 export default async function UpgradePage() {
@@ -36,11 +38,11 @@ export default async function UpgradePage() {
               </span>
             </div>
             <div className="mt-3 flex items-baseline gap-1.5">
-              <span className="text-5xl font-extrabold tracking-tight text-foreground">$9.900</span>
-              <span className="text-base text-muted-foreground">ARS / mes</span>
+              <span className="text-5xl font-extrabold tracking-tight text-foreground">USD 20</span>
+              <span className="text-base text-muted-foreground">/ mes</span>
             </div>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              Primeros 7 días gratis &mdash; cancelá cuando quieras.
+              + impuestos aplicables &mdash; cancelá cuando quieras.
             </p>
           </div>
 
@@ -50,11 +52,13 @@ export default async function UpgradePage() {
             </p>
             <ul className="flex flex-col gap-2.5">
               {incluido.map((item) => (
-                <li key={item} className="flex items-start gap-2.5">
-                  <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <li key={item.texto} className={`flex items-start gap-2.5 ${item.highlight ? 'rounded-lg bg-primary/5 px-2 py-2 -mx-2' : ''}`}>
+                  <span className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full ${item.highlight ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'}`}>
                     <Check className="size-3" aria-hidden="true" />
                   </span>
-                  <span className="text-sm leading-relaxed text-muted-foreground">{item}</span>
+                  <span className={`text-sm leading-relaxed ${item.highlight ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                    {item.texto}
+                  </span>
                 </li>
               ))}
             </ul>

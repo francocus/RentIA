@@ -85,6 +85,24 @@ export const subscription = pgTable('subscription', {
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
 
+// Contratos escaneados por inquilinos — fuente de datos para inmobiliarias.
+// Los campos de usuario están anonimizados (no se expone userId).
+export const scannedContracts = pgTable('scanned_contracts', {
+  id: serial('id').primaryKey(),
+  userId: text('userId').notNull(),
+  barrio: text('barrio'),
+  zona: text('zona'),
+  ambientes: integer('ambientes'),
+  m2: integer('m2'),
+  alquiler: integer('alquiler'),
+  ajuste: text('ajuste'),
+  plazo: text('plazo'),
+  regimen: text('regimen'),
+  fechaContrato: text('fechaContrato'),
+  resumen: text('resumen'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+})
+
 // Contratos de referencia de mercado. El comparador calcula promedio/min/max
 // por zona directamente desde esta tabla (datos sembrados).
 export const marketListings = pgTable('market_listings', {

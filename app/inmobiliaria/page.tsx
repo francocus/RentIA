@@ -1,7 +1,7 @@
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowRight, Building2, ClipboardCheck, Clock, CreditCard, Sparkles } from 'lucide-react'
+import { ArrowRight, Building2, ClipboardCheck, Clock, CreditCard, Database, Sparkles } from 'lucide-react'
 
 import { auth } from '@/lib/auth'
 import { getSubscriptionStatus } from '@/lib/subscription'
@@ -62,6 +62,10 @@ export default async function InmobiliariaPage() {
                 Analizar nuevo postulante
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
+              <Link href="/inmobiliaria/contratos" className={buttonVariants({ variant: 'secondary', size: 'lg' })}>
+                <Database className="size-4" aria-hidden="true" />
+                Ver base de contratos
+              </Link>
               <Link
                 href="/inmobiliaria/upgrade"
                 className={buttonVariants({ variant: 'outline', size: 'lg' })}
@@ -86,6 +90,29 @@ export default async function InmobiliariaPage() {
               </div>
             ))}
           </div>
+
+          {/* Highlight: base de contratos */}
+          <Link
+            href="/inmobiliaria/contratos"
+            className="group mt-8 flex items-start gap-5 rounded-2xl border-2 border-primary/40 bg-primary/5 p-6 transition-colors hover:border-primary/70 hover:bg-primary/10"
+          >
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Database className="size-6" aria-hidden="true" />
+            </span>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-foreground">Base de contratos scaneados por inquilinos</h2>
+                <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">Exclusivo premium</span>
+              </div>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                Accedé a todos los contratos que inquilinos de Rosario analizaron en RentIA. Filtrá por barrio, precio,
+                régimen y fecha para entender el mercado real y tomar mejores decisiones comerciales.
+              </p>
+              <p className="mt-3 flex items-center gap-1.5 text-sm font-medium text-primary transition-transform group-hover:gap-2.5">
+                Explorar contratos <ArrowRight className="size-4" aria-hidden="true" />
+              </p>
+            </div>
+          </Link>
 
           <div className="mt-4 rounded-xl border border-border bg-card p-6">
             <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
