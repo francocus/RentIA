@@ -306,6 +306,7 @@ export function MeshShaderBg() {
     let hidden = false
 
     function resize() {
+      if (!gl) return
       const w = canvas!.offsetWidth
       const h = canvas!.offsetHeight
       canvas!.width  = w * dpr
@@ -319,7 +320,7 @@ export function MeshShaderBg() {
 
     const start = performance.now()
     function frame() {
-      if (hidden) return
+      if (hidden || !gl) return
       const t = ((performance.now() - start) / 1000) * 0.73
       gl.uniform4f(uScene, canvas!.width, canvas!.height, t, 4.0)
       gl.drawArrays(gl.TRIANGLES, 0, 3)
