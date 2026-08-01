@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, serial, jsonb } from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, boolean, serial, jsonb, integer } from 'drizzle-orm/pg-core'
 
 // --- Better Auth required tables -------------------------------------------
 // Column names are camelCase to match Better Auth's defaults. Do not rename.
@@ -66,5 +66,19 @@ export const analyses = pgTable('analyses', {
   esPosteriorNuevaLey: boolean('esPosteriorNuevaLey'),
   resumen: text('resumen'),
   resultado: jsonb('resultado').notNull(),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+})
+
+// Contratos de referencia de mercado. El comparador calcula promedio/min/max
+// por zona directamente desde esta tabla (datos sembrados).
+export const marketListings = pgTable('market_listings', {
+  id: serial('id').primaryKey(),
+  zonaId: text('zonaId').notNull(),
+  zona: text('zona').notNull(),
+  ciudad: text('ciudad').notNull(),
+  ambientes: integer('ambientes').notNull(),
+  m2: integer('m2').notNull(),
+  alquiler: integer('alquiler').notNull(),
+  fecha: text('fecha').notNull(),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
