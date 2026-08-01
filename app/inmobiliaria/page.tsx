@@ -1,7 +1,12 @@
+import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowRight, Building2, ClipboardCheck, Clock, Sparkles } from 'lucide-react'
+import { ArrowRight, Building2, ClipboardCheck, Clock, CreditCard, Sparkles } from 'lucide-react'
+import { auth } from '@/lib/auth'
+import { getSubscriptionStatus } from '@/lib/subscription'
 import { buttonVariants } from '@/components/ui/button'
 import { PageShell } from '@/components/page-shell'
+import { createPortalSession } from '@/app/actions/stripe'
 
 const beneficios = [
   {
@@ -21,7 +26,21 @@ const beneficios = [
   },
 ]
 
-export default function InmobiliariaPage() {
+export default async function InmobiliariaPage() {
+  const session = await auth.api.getSession({ headers: await headers() })
+
+  // No está logueado → redirigir al registro de inmobiliaria
+  if (!session?.user) {
+    redirect('/sign-up/inmobiliaria')
+  }
+
+  const { isInmobiliaria, hasActiveSub, role } = await getSubscriptionStatus()
+
+  // Tiene cuenta pero no suscripción activa → redirigir al upgrade
+  if (!isInmobiliaria) {
+    redirect('/inmobiliaria/upgrade')
+  }
+
   return (
     <PageShell>
       <section className="border-b border-border bg-secondary/40">
@@ -29,7 +48,7 @@ export default function InmobiliariaPage() {
           <div className="max-w-2xl">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
               <Building2 className="size-3.5" aria-hidden="true" />
-              Para inmobiliarias
+              Plan Inmobiliaria activo
             </span>
             <h1 className="mt-4 text-balance text-4xl font-extrabold tracking-tight text-foreground md:text-5xl">
               Automatizá el análisis de postulantes con IA
@@ -43,12 +62,15 @@ export default function InmobiliariaPage() {
                 Analizar nuevo postulante
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
-              <Link
-                href="/"
-                className={buttonVariants({ variant: 'outline', size: 'lg' })}
-              >
-                Volver al inicio
-              </Link>
+              <form action={createPortalSession}>
+                <button
+                  type="submit"
+                  className={buttonVariants({ variant: 'outline', size: 'lg' })}
+                >
+                  <CreditCard className="size-4" aria-hidden="true" />
+                  Gestionar suscripción
+                </button>
+              </form>
             </div>
           </div>
 
@@ -70,9 +92,7 @@ export default function InmobiliariaPage() {
           <div className="mt-4 rounded-xl border border-border bg-card p-6">
             <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="font-semibold text-card-foreground">
-                  ¿Cómo funciona?
-                </h2>
+                <h2 className="font-semibold text-card-foreground">¿Cómo funciona?</h2>
                 <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                   Ingresá los datos del postulante, marcá los documentos recibidos y presioná
                   &ldquo;Analizar con IA&rdquo;. En segundos tenés un resumen del expediente con

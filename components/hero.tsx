@@ -77,7 +77,7 @@ export function Hero() {
               />
             </Link>
             <Link
-              href="/inmobiliaria"
+              href="/sign-up/inmobiliaria"
               className="group flex items-center gap-4 rounded-xl border border-border bg-card/80 p-5 backdrop-blur-sm transition-colors hover:border-primary/50"
             >
               <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">

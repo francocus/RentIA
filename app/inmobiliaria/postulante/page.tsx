@@ -1,9 +1,14 @@
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { PageShell } from '@/components/page-shell'
 import { ApplicantAnalyzer } from '@/components/inmobiliaria/applicant-analyzer'
+import { getSubscriptionStatus } from '@/lib/subscription'
 
-export default function PostulantePage() {
+export default async function PostulantePage() {
+  const { isInmobiliaria } = await getSubscriptionStatus()
+  if (!isInmobiliaria) redirect('/inmobiliaria/upgrade')
+
   return (
     <PageShell>
       <div className="mx-auto max-w-6xl px-4 py-10">

@@ -9,6 +9,8 @@ export const user = pgTable('user', {
   email: text('email').notNull().unique(),
   emailVerified: boolean('emailVerified').notNull().default(false),
   image: text('image'),
+  // 'inquilino' | 'inmobiliaria'
+  role: text('role').notNull().default('inquilino'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
@@ -67,6 +69,20 @@ export const analyses = pgTable('analyses', {
   resumen: text('resumen'),
   resultado: jsonb('resultado').notNull(),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
+})
+
+// Suscripciones Stripe para cuentas inmobiliaria.
+export const subscription = pgTable('subscription', {
+  id: text('id').primaryKey(),
+  userId: text('userId').notNull(),
+  stripeCustomerId: text('stripeCustomerId'),
+  stripeSubscriptionId: text('stripeSubscriptionId'),
+  stripePriceId: text('stripePriceId'),
+  // 'inactive' | 'active' | 'past_due' | 'canceled'
+  status: text('status').notNull().default('inactive'),
+  currentPeriodEnd: timestamp('currentPeriodEnd'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
 
 // Contratos de referencia de mercado. El comparador calcula promedio/min/max
