@@ -79,7 +79,7 @@ export default async function UpgradePage() {
           </div>
           <DemoCheckoutForm />
           <p className="mt-4 text-center text-xs text-muted-foreground">
-            Esta es una demo. No se realizará ningún cobro real.
+            Pago único en USDC. Renovás el acceso cada 30 días.
           </p>
         </div>
       </div>

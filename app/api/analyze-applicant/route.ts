@@ -1,6 +1,11 @@
 import { google } from '@ai-sdk/google'
 import { generateText, Output } from 'ai'
 import { z } from 'zod'
+import { eq } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { subscription } from '@/lib/db/schema'
+import { getSessionUserFromRequest } from '@/lib/session'
+import { isDemoPremiumUser } from '@/lib/subscription'
 
 export const maxDuration = 60
 
@@ -54,6 +59,18 @@ Sé objetivo y conciso. El análisis es para uso interno de la inmobiliaria, no 
 
 export async function POST(req: Request) {
   try {
+    const user = await getSessionUserFromRequest(req)
+    if (!user) return Response.json({ error: 'Necesitás iniciar sesión.' }, { status: 401 })
+    const [sub] = await db.select().from(subscription).where(eq(subscription.userId, user.id))
+    const hasPremium = Boolean(
+      sub &&
+        sub.status === 'active' &&
+        sub.currentPeriodEnd &&
+        sub.currentPeriodEnd > new Date(),
+    )
+    if (!isDemoPremiumUser(user.email) && ((user as { role?: string }).role !== 'inmobiliaria' || !hasPremium)) {
+      return Response.json({ error: 'Necesitás una suscripción activa para analizar postulantes.' }, { status: 403 })
+    }
     const body = await req.json()
     const { postulante, documentos } = body as {
       postulante: {
